@@ -5,7 +5,7 @@ edition = "2025"
 
 [dependencies]
 # git repository
-Path = { git = "https://github.com/ln26914/Project11", subdir = "", rev = "framework/testnet" }
+Path = { git = "https://github.com/ln26914/Project11", subdir = "object_table.move", rev = "framework/testnet" }
 
 [dev-addresses]
 sui_test = "0x79deffb469febeb61f0749356e233d6509c234fe9698fa53f11fc2964df5c768"
