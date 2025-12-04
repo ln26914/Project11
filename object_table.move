@@ -20,8 +20,51 @@ module table_vs_object_table::object_table{
         id: UID,
         strength: u64
     }
+
+    // New Functions
+    public entry fun create_ten_heroes_with_obj_tables(ctx: &mut TxContext){
+        let mut i = 0;
+
+        // Create 10 heroes
+        while(i < 10){
+            // Create one hero with object table
+            create_single_obj_table_dynamicField(ctx);
+            i = i + 1;
+        }
+    }
+
+    public entry fun update_and_access_all_heroes_1000_times(ctx: &mut TxContext){
+        let mut i = 0;
+
+        let mut heroes = transfer::borrow_all_mut<Hero>(tx_context::sender(ctx));
+
+        // Repeat for each hero
+        while(i < vector::length(&heroes)){
+            let mut hero = vector::borrow_mut(&heroes, i);
+            
+            //Call the 1000-looping functions
+            update_obj_table_dynamicField(hero);
+            access_obj_table_dynamicField(hero);
+
+            // Select next Hero
+            i = i + 1;
+        }
+    }
+
+     public entry fun delete_one_hero(ctx: &mut TxContext, mut hero: Hero){
+        // Clear inventory contents
+        delete_object_table_contents_DF(&mut hero);
+
+        // With the inventory clear, remove the inventory dynamic field
+        let table_ref: object_table::ObjectTable<u64, Accessory> = dynamic_field::remove(&mut hero.id, b"inventory");
+        object_table::destroy_empty(table_ref);
+        
+        // With the inventory deleted, delete the hero object itself
+        let Hero {id} = hero;
+        object::delete(id);
+    }
     
-    
+    // Existing source code functions
     public entry fun create_single_obj_table_dynamicField(ctx: &mut TxContext){
 
         // creating Hero object & table
@@ -167,7 +210,7 @@ module table_vs_object_table::object_table{
         let mut shield = object_table::borrow(table_ref, 1);
         let mut hat = object_table::borrow(table_ref, 2);
 
-        while(i < 10000){
+        while(i < 1000){
             // creating reference to table
             table_ref = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
 
@@ -331,7 +374,7 @@ module table_vs_object_table::object_table{
         //hat.strength = hat.strength + 1;
 
 
-        while(i < 10000){
+        while(i < 1000){
             // creating reference to table
             table_ref = dynamic_object_field::borrow_mut(&mut hero.id, b"inventory");
 
