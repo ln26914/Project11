@@ -49,6 +49,30 @@ module dynamic_vs_wrap::hero_dynamic_fields{
         //transfer::share_object(hero);
     }
 
+    public entry fun create_10_hero_dynamic_fields(ctx: &mut TxContext){
+        let mut i = 0;
+        while (i < 10){
+            
+            // Create hero object
+            let mut hero = Hero{id: object::new(ctx)};
+
+            // Assign Dynamic Fields
+            let mut sword = Sword{id: object::new(ctx), strength: 0};
+            let mut shield = Shield{id: object::new(ctx), strength: 0};
+            let mut hat = Hat{id: object::new(ctx), strength: 0};
+
+            // Add Dynamic Fields to hero
+            dynamic_field::add(&mut hero.id, b"sword", sword);
+            dynamic_field::add(&mut hero.id, b"shield", shield);
+            dynamic_field::add(&mut hero.id, b"hat", hat);
+
+            transfer::transfer(hero, tx_context::sender(ctx));
+            //hero.id.delete();
+            //transfer::share_object(hero);
+            i = i + 1;
+        }
+    }
+
     public entry fun create_hero_dynamic_fields(ctx: &mut TxContext){
         let mut i = 0;
         while (i < 150){
