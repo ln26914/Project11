@@ -3,6 +3,12 @@ module table_vs_object_table::object_table{
     use sui::object_table;
     use sui::dynamic_field;
     use sui::dynamic_object_field;
+    use sui::tx_context::{self, TxContext};
+    use sui::vector;
+    use sui::object;
+    use sui::transfer;
+    use sui::uid::UID;
+    use sui::borrow;
 
     // To be used in Dynamic and Dynamic Object Fields
     public struct Hero has key, store{
@@ -33,22 +39,14 @@ module table_vs_object_table::object_table{
         }
     }
 
-    public entry fun update_and_access_all_heroes_1000_times(ctx: &mut TxContext){
-        let mut i = 0;
+    public entry fun update_hero(ctx: &mut TxContext, hero: &mut Hero) {
 
-        let mut heroes = transfer::borrow_all_mut<Hero>(tx_context::sender(ctx));
+        update_obj_table_dynamicField(hero);
+    }
 
-        // Repeat for each hero
-        while(i < vector::length(&heroes)){
-            let mut hero = vector::borrow_mut(&heroes, i);
-            
-            //Call the 1000-looping functions
-            update_obj_table_dynamicField(hero);
-            access_obj_table_dynamicField(hero);
+    public entry fun access_hero(ctx: &mut TxContext, hero: &mut Hero) {
+        access_obj_table_dynamicField(hero);
 
-            // Select next Hero
-            i = i + 1;
-        }
     }
 
      public entry fun delete_one_hero(ctx: &mut TxContext, mut hero: Hero){
@@ -267,7 +265,7 @@ module table_vs_object_table::object_table{
         let mut shield = object_table::borrow(&mut hero.inventory, 1);
         let mut hat = object_table::borrow(&mut hero.inventory, 2);
 
-        while(i < 10000){
+        while(i < 1000){
             sword = object_table::borrow(&mut hero.inventory, 0);
             shield = object_table::borrow(&mut hero.inventory, 1);
             hat = object_table::borrow(&mut hero.inventory, 2);
@@ -294,7 +292,7 @@ module table_vs_object_table::object_table{
         hat.strength = hat.strength + 1;
 
 
-        while (i < 10000){
+        while (i < 1000){
             sword = object_table::borrow_mut(&mut hero.inventory, 0);
             sword.strength = sword.strength + 1;
 
@@ -331,7 +329,7 @@ module table_vs_object_table::object_table{
         //hat.strength = hat.strength + 1;
 
 
-        while(i < 10000){
+        while(i < 1000){
             // creating reference to table
             table_ref = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
 
