@@ -2,11 +2,10 @@ module table_vs_object_table::vector_inventory{
 
     use sui::dynamic_field;
     use sui::dynamic_object_field;
-    use sui::tx_context::{self, TxContext};
-    use sui::vector;
-    use sui::object;
+    use sui::tx_context::TxContext;
+    use std::vector;
+    use sui::object::{Self, UID};
     use sui::transfer;
-    use sui::uid::UID;
 
     // To be used in Dynamic and Dynamic Object Fields
     public struct Hero has key, store{
@@ -36,15 +35,15 @@ module table_vs_object_table::vector_inventory{
         }
     }
 
-    public entry fun update_hero(ctx: &mut TxContext, hero: &mut Hero) {
+    public entry fun update_hero(hero: &mut Hero) {
         update_vector_dynamicField(hero);
     }
 
-    public entry fun access_hero(ctx: &mut TxContext, hero: &mut Hero) {
+    public entry fun access_hero(hero: &mut Hero) {
         access_vector_dynamicField(hero);
     }
 
-     public entry fun delete_one_hero(ctx: &mut TxContext, mut hero: Hero){
+     public entry fun delete_one_hero(mut hero: Hero){
         // Remove the inventory dynamic field
         let _inventory: vector<Accessory> = dynamic_field::remove(&mut hero.id, b"inventory");
         // Vector will be automatically dropped
@@ -73,7 +72,7 @@ module table_vs_object_table::vector_inventory{
         dynamic_field::add(&mut hero.id, b"inventory", inventory);
 
         // transferring ownership of the hero to ourselves
-        transfer::transfer(hero, tx_context::sender(ctx));
+        transfer::transfer(hero, ctx.sender());
     }
 
 
@@ -97,7 +96,7 @@ module table_vs_object_table::vector_inventory{
             dynamic_field::add(&mut hero.id, b"inventory", inventory);
 
             // transferring ownership of the hero to ourselves
-            transfer::transfer(hero, tx_context::sender(ctx));
+            transfer::transfer(hero, ctx.sender());
             i = i + 1;
         }
     }
@@ -120,11 +119,11 @@ module table_vs_object_table::vector_inventory{
                 j = j + 1;
             };
 
-            // adding vector to Hero as Dynamic Object Field
-            dynamic_object_field::add(&mut hero.id, b"inventory", inventory);
+            // adding vector to Hero as Dynamic Field (NOT dynamic object field - vectors can't be objects)
+            dynamic_field::add(&mut hero.id, b"inventory", inventory);
 
             // transferring ownership of the hero to ourselves
-            transfer::transfer(hero, tx_context::sender(ctx));
+            transfer::transfer(hero, ctx.sender());
             i = i + 1;
         }
     }
@@ -143,7 +142,7 @@ module table_vs_object_table::vector_inventory{
 
         let hero = Wrapped_Hero{id: object::new(ctx), inventory};
 
-        transfer::transfer(hero, tx_context::sender(ctx));
+        transfer::transfer(hero, ctx.sender());
 
     }
 
@@ -163,7 +162,7 @@ module table_vs_object_table::vector_inventory{
 
             let hero = Wrapped_Hero{id: object::new(ctx), inventory};
 
-            transfer::transfer(hero, tx_context::sender(ctx));
+            transfer::transfer(hero, ctx.sender());
 
             i = i + 1;
         }
@@ -197,16 +196,17 @@ module table_vs_object_table::vector_inventory{
 
 
     // Accessing the Accessory's strength from the Vector
+    // Note: This uses dynamic_field (not dynamic_object_field) because vectors don't have 'key' ability
     public entry fun access_vector_dynamicObjectField(hero: &mut Hero){
         let mut i = 0;
         let mut access_strength = 0u64;
 
-        // creating reference to vector to borrow Accessories from the Dynamic Object Field
-        let inventory_ref: &vector<Accessory> = dynamic_object_field::borrow(&hero.id, b"inventory");
+        // Using dynamic_field because vectors can't be dynamic object fields
+        let inventory_ref: &vector<Accessory> = dynamic_field::borrow(&hero.id, b"inventory");
 
         while(i < 10000){
             // creating reference to vector
-            inventory_ref = dynamic_object_field::borrow(&hero.id, b"inventory");
+            inventory_ref = dynamic_field::borrow(&hero.id, b"inventory");
 
             // accessing accessories from vector
             let mut j = 0;
@@ -257,7 +257,6 @@ module table_vs_object_table::vector_inventory{
 
     public entry fun update_vector_dynamicField(hero: &mut Hero){
         let mut i = 0;
-        let mut update_strength = 0u64;
 
         // creating reference to vector to borrow Accessories from the Dynamic Field
         let mut inventory_ref: &mut vector<Accessory> = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
@@ -279,16 +278,16 @@ module table_vs_object_table::vector_inventory{
     }
 
 
+    // Note: This uses dynamic_field (not dynamic_object_field) because vectors don't have 'key' ability
     public entry fun update_vector_dynamicObjectField(hero: &mut Hero){
         let mut i = 0;
-        let mut update_strength = 0u64;
 
-        // creating reference to vector to borrow Accessories from the Dynamic Field
-        let mut inventory_ref: &mut vector<Accessory> = dynamic_object_field::borrow_mut(&mut hero.id, b"inventory");
+        // Using dynamic_field because vectors can't be dynamic object fields
+        let mut inventory_ref: &mut vector<Accessory> = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
 
         while(i < 1000){
             // creating reference to vector
-            inventory_ref = dynamic_object_field::borrow_mut(&mut hero.id, b"inventory");
+            inventory_ref = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
 
             // updating accessories in vector
             let mut j = 0;
@@ -311,8 +310,9 @@ module table_vs_object_table::vector_inventory{
         object::delete(id);
     }
 
+    // Note: This uses dynamic_field because vectors were stored as regular dynamic fields
     public entry fun delete_vector_dynamicObjectField(mut hero: Hero){
-        let _inventory: vector<Accessory> = dynamic_object_field::remove(&mut hero.id, b"inventory");
+        let _inventory: vector<Accessory> = dynamic_field::remove(&mut hero.id, b"inventory");
         // Vector will be automatically dropped
         
         let Hero{id} = hero;
