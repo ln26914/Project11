@@ -3,12 +3,10 @@ module table_vs_object_table::object_table{
     use sui::object_table;
     use sui::dynamic_field;
     use sui::dynamic_object_field;
-    use sui::tx_context::{self, TxContext};
-    use sui::vector;
-    use sui::object;
+    use sui::tx_context::TxContext;
+    use std::vector;
+    use sui::object::{Self, UID};
     use sui::transfer;
-    use sui::uid::UID;
-    use sui::borrow;
 
     // To be used in Dynamic and Dynamic Object Fields
     public struct Hero has key, store{
@@ -39,17 +37,15 @@ module table_vs_object_table::object_table{
         }
     }
 
-    public entry fun update_hero(ctx: &mut TxContext, hero: &mut Hero) {
-
+    public entry fun update_hero(hero: &mut Hero) {
         update_obj_table_dynamicField(hero);
     }
 
-    public entry fun access_hero(ctx: &mut TxContext, hero: &mut Hero) {
+    public entry fun access_hero(hero: &mut Hero) {
         access_obj_table_dynamicField(hero);
-
     }
 
-     public entry fun delete_one_hero(ctx: &mut TxContext, mut hero: Hero){
+     public entry fun delete_one_hero(mut hero: Hero){
         // Clear inventory contents
         delete_object_table_contents_DF(&mut hero);
 
@@ -84,14 +80,7 @@ module table_vs_object_table::object_table{
         dynamic_field::add(&mut hero.id, b"inventory", table);
 
         // transferring ownership of the hero to ourselves
-        transfer::transfer(hero, tx_context::sender(ctx));
-
-        
-
-        /* NO LONGER NEEDED
-        // transferring ownership of the table to ourselves (we should actually give onwership to hero)
-        sui::transfer::public_transfer(table, tx_context::sender(ctx));
-        */
+        transfer::transfer(hero, ctx.sender());
     }
 
 
@@ -118,7 +107,7 @@ module table_vs_object_table::object_table{
             dynamic_field::add(&mut hero.id, b"inventory", table);
 
             // transferring ownership of the hero to ourselves
-            transfer::transfer(hero, tx_context::sender(ctx));
+            transfer::transfer(hero, ctx.sender());
             i = i + 1;
         }
     }
@@ -148,7 +137,7 @@ module table_vs_object_table::object_table{
             dynamic_object_field::add(&mut hero.id, b"inventory", table);
 
             // transferring ownership of the hero to ourselves
-            transfer::transfer(hero, tx_context::sender(ctx));
+            transfer::transfer(hero, ctx.sender());
             i = i + 1;
         }
     }
@@ -167,7 +156,7 @@ module table_vs_object_table::object_table{
 
         let hero = Wrapped_Hero{id: object::new(ctx), inventory: table};
 
-        transfer::transfer(hero, tx_context::sender(ctx));
+        transfer::transfer(hero, ctx.sender());
 
     }
 
@@ -187,7 +176,7 @@ module table_vs_object_table::object_table{
 
             let hero = Wrapped_Hero{id: object::new(ctx), inventory: table};
 
-            transfer::transfer(hero, tx_context::sender(ctx));
+            transfer::transfer(hero, ctx.sender());
 
             i = i + 1;
         }
@@ -280,7 +269,6 @@ module table_vs_object_table::object_table{
 
     public entry fun update_obj_table_wrappedHero(hero: &mut Wrapped_Hero){
         let mut i = 0;
-        //let mut update_strength = 0u64;
         
         let mut sword = object_table::borrow_mut(&mut hero.inventory, 0);
         sword.strength = sword.strength + 1;
@@ -309,7 +297,6 @@ module table_vs_object_table::object_table{
 
     public entry fun update_obj_table_dynamicField(hero: &mut Hero){
         let mut i = 0;
-        let mut update_strength = 0u64;
 
         // creating reference to table to borrow Accessories from the Dynamic Field
         let mut table_ref: &mut sui::object_table::ObjectTable<u64, Accessory> = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
@@ -323,10 +310,6 @@ module table_vs_object_table::object_table{
         
         let mut hat = object_table::borrow_mut(table_ref, 2);
         hat.strength = hat.strength + 1;
-
-        //sword.strength = sword.strength + 1;
-        //shield.strength = shield.strength + 1;
-        //hat.strength = hat.strength + 1;
 
 
         while(i < 1000){
@@ -343,8 +326,6 @@ module table_vs_object_table::object_table{
             hat = object_table::borrow_mut(table_ref, 2);
             hat.strength = hat.strength + 1;
 
-            
-
             i = i + 1;
         }
     }
@@ -352,7 +333,6 @@ module table_vs_object_table::object_table{
 
     public entry fun update_obj_table_dynamicObjectField(hero: &mut Hero){
         let mut i = 0;
-        let mut update_strength = 0u64;
 
         // creating reference to table to borrow Accessories from the Dynamic Field
         let mut table_ref: &mut sui::object_table::ObjectTable<u64, Accessory> = dynamic_object_field::borrow_mut(&mut hero.id, b"inventory");
@@ -366,10 +346,6 @@ module table_vs_object_table::object_table{
         
         let mut hat = object_table::borrow_mut(table_ref, 2);
         hat.strength = hat.strength + 1;
-
-        //sword.strength = sword.strength + 1;
-        //shield.strength = shield.strength + 1;
-        //hat.strength = hat.strength + 1;
 
 
         while(i < 1000){
@@ -447,10 +423,6 @@ module table_vs_object_table::object_table{
 
         object::delete(id);
     }
-
-    
-
-
 
     // Deleting Object Tables
     public entry fun delete_object_table_dynamicObjectField_detachAndDeleteAccessories(mut hero: Hero){
