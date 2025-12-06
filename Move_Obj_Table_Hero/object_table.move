@@ -38,14 +38,14 @@ module table_vs_object_table::object_table{
     }
 
     public entry fun update_hero(hero: &mut Hero) {
-        update_obj_table_dynamicField(hero);
+        update_obj_table_dynamicField(Hero);
     }
 
     public entry fun access_hero(hero: &mut Hero) {
         access_obj_table_dynamicField(hero);
     }
 
-     public entry fun delete_one_hero(mut hero: Hero){
+    public entry fun delete_one_hero(mut hero: Hero){
         // Clear inventory contents
         delete_object_table_contents_DF(&mut hero);
 
