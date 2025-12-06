@@ -1,9 +1,7 @@
 module table_vs_object_table::vector_inventory{
 
     use sui::dynamic_field;
-    use sui::dynamic_object_field;
     use sui::tx_context::TxContext;
-    use std::vector;
     use sui::object::{Self, UID};
     use sui::transfer;
 
@@ -39,11 +37,19 @@ module table_vs_object_table::vector_inventory{
         update_vector_dynamicField(hero);
     }
 
+    public entry fun update_wrapped_hero(hero: &mut Wrapped_Hero) {
+        update_vector_wrappedHero(hero);
+    }
+
     public entry fun access_hero(hero: &mut Hero) {
         access_vector_dynamicField(hero);
     }
 
-     public entry fun delete_one_hero(mut hero: Hero){
+    public entry fun access_wrapped_hero(hero: &mut Wrapped_Hero) {
+        access_vector_wrappedHero(hero);
+    }
+
+     public entry fun delete_one_hero(hero: Hero){
         // Remove the inventory dynamic field
         let _inventory: vector<Accessory> = dynamic_field::remove(&mut hero.id, b"inventory");
         // Vector will be automatically dropped
@@ -51,6 +57,10 @@ module table_vs_object_table::vector_inventory{
         // With the inventory deleted, delete the hero object itself
         let Hero {id} = hero;
         object::delete(id);
+    }
+
+    public entry fun delete_one_wrapped_hero(hero: Wrapped_Hero){
+        delete_wrapped_vector(hero);
     }
     
     // Existing source code functions modified for vectors
@@ -173,20 +183,17 @@ module table_vs_object_table::vector_inventory{
 
     public entry fun access_vector_dynamicField(hero: &mut Hero){
         let mut i = 0;
-        let mut access_strength = 0u64;
-
-        // creating reference to vector to borrow Accessories from the Dynamic Field
-        let inventory_ref: &vector<Accessory> = dynamic_field::borrow(&hero.id, b"inventory");
+        let mut _access_strength;
 
         while(i < 1000){
             // creating reference to vector
-            inventory_ref = dynamic_field::borrow(&hero.id, b"inventory");
+            let inventory_ref = dynamic_field::borrow(&hero.id, b"inventory");
 
             // accessing accessories from vector
             let mut j = 0;
             while(j < 200){
                 let accessory = vector::borrow(inventory_ref, j);
-                access_strength = accessory.strength;
+                _access_strength = accessory.strength;
                 j = j + 1;
             };
 
@@ -199,20 +206,17 @@ module table_vs_object_table::vector_inventory{
     // Note: This uses dynamic_field (not dynamic_object_field) because vectors don't have 'key' ability
     public entry fun access_vector_dynamicObjectField(hero: &mut Hero){
         let mut i = 0;
-        let mut access_strength = 0u64;
-
-        // Using dynamic_field because vectors can't be dynamic object fields
-        let inventory_ref: &vector<Accessory> = dynamic_field::borrow(&hero.id, b"inventory");
+        let mut _access_strength;
 
         while(i < 10000){
             // creating reference to vector
-            inventory_ref = dynamic_field::borrow(&hero.id, b"inventory");
+            let inventory_ref = dynamic_field::borrow(&hero.id, b"inventory");
 
             // accessing accessories from vector
             let mut j = 0;
             while(j < 200){
                 let accessory = vector::borrow(inventory_ref, j);
-                access_strength = accessory.strength;
+                _access_strength = accessory.strength;
                 j = j + 1;
             };
 
@@ -223,14 +227,14 @@ module table_vs_object_table::vector_inventory{
 
     public entry fun access_vector_wrappedHero(hero: &mut Wrapped_Hero){
         let mut i = 0;
-        let mut access_strength = 0u64;
+        let mut _access_strength;
 
         while(i < 1000){
             // accessing accessories from vector
             let mut j = 0;
             while(j < 200){
                 let accessory = vector::borrow(&hero.inventory, j);
-                access_strength = accessory.strength;
+                _access_strength = accessory.strength;
                 j = j + 1;
             };
 
@@ -258,12 +262,9 @@ module table_vs_object_table::vector_inventory{
     public entry fun update_vector_dynamicField(hero: &mut Hero){
         let mut i = 0;
 
-        // creating reference to vector to borrow Accessories from the Dynamic Field
-        let mut inventory_ref: &mut vector<Accessory> = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
-
         while(i < 1000){
             // creating reference to vector
-            inventory_ref = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
+            let inventory_ref = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
 
             // updating accessories in vector
             let mut j = 0;
@@ -282,12 +283,9 @@ module table_vs_object_table::vector_inventory{
     public entry fun update_vector_dynamicObjectField(hero: &mut Hero){
         let mut i = 0;
 
-        // Using dynamic_field because vectors can't be dynamic object fields
-        let mut inventory_ref: &mut vector<Accessory> = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
-
         while(i < 1000){
             // creating reference to vector
-            inventory_ref = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
+            let inventory_ref = dynamic_field::borrow_mut(&mut hero.id, b"inventory");
 
             // updating accessories in vector
             let mut j = 0;
@@ -302,7 +300,7 @@ module table_vs_object_table::vector_inventory{
     }
 
     // Deleting Vector-based inventories
-    public entry fun delete_vector_dynamicField(mut hero: Hero){
+    public entry fun delete_vector_dynamicField(hero: Hero){
         let _inventory: vector<Accessory> = dynamic_field::remove(&mut hero.id, b"inventory");
         // Vector will be automatically dropped
         
@@ -311,7 +309,7 @@ module table_vs_object_table::vector_inventory{
     }
 
     // Note: This uses dynamic_field because vectors were stored as regular dynamic fields
-    public entry fun delete_vector_dynamicObjectField(mut hero: Hero){
+    public entry fun delete_vector_dynamicObjectField(hero: Hero){
         let _inventory: vector<Accessory> = dynamic_field::remove(&mut hero.id, b"inventory");
         // Vector will be automatically dropped
         
@@ -320,7 +318,7 @@ module table_vs_object_table::vector_inventory{
     }
     
     // Deleting Wrapped Vector
-    public entry fun delete_wrapped_vector(mut hero: Wrapped_Hero){
+    public entry fun delete_wrapped_vector(hero: Wrapped_Hero){
         let Wrapped_Hero{id, inventory: _} = hero;
         object::delete(id);
         // Vector will be automatically dropped

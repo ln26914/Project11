@@ -38,14 +38,22 @@ module table_vs_object_table::object_table{
     }
 
     public entry fun update_hero(hero: &mut Hero) {
-        update_obj_table_dynamicField(Hero);
+        update_obj_table_dynamicField(hero);
+    }
+
+    public entry fun update_wrapped_hero(hero: &mut Wrapped_Hero) {
+        update_obj_table_wrappedHero(hero);
     }
 
     public entry fun access_hero(hero: &mut Hero) {
         access_obj_table_dynamicField(hero);
     }
 
-    public entry fun delete_one_hero(mut hero: Hero){
+    public entry fun access_wrapped_hero(hero: &mut Wrapped_Hero) {
+        access_obj_table_wrappedHero(hero);
+    }
+
+     public entry fun delete_one_hero(hero: Hero){
         // Clear inventory contents
         delete_object_table_contents_DF(&mut hero);
 
@@ -56,6 +64,10 @@ module table_vs_object_table::object_table{
         // With the inventory deleted, delete the hero object itself
         let Hero {id} = hero;
         object::delete(id);
+    }
+
+    public entry fun delete_one_wrapped_hero(hero: Wrapped_Hero){
+        delete_wrapped_object_table_UnpackAndDeleteHeroAndAccessories(hero);
     }
     
     // Existing source code functions
