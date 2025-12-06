@@ -3,10 +3,7 @@ module table_vs_object_table::object_table{
     use sui::object_table;
     use sui::dynamic_field;
     use sui::dynamic_object_field;
-    use sui::tx_context::TxContext;
-    use std::vector;
-    use sui::object::{Self, UID};
-    use sui::transfer;
+    use sui::object;
 
     // To be used in Dynamic and Dynamic Object Fields
     public struct Hero has key, store{
@@ -53,7 +50,7 @@ module table_vs_object_table::object_table{
         access_obj_table_wrappedHero(hero);
     }
 
-     public entry fun delete_one_hero(hero: Hero){
+     public entry fun delete_one_hero(mut hero: Hero){
         // Clear inventory contents
         delete_object_table_contents_DF(&mut hero);
 
@@ -66,7 +63,7 @@ module table_vs_object_table::object_table{
         object::delete(id);
     }
 
-    public entry fun delete_one_wrapped_hero(hero: Wrapped_Hero){
+    public entry fun delete_one_wrapped_hero(mut hero: Wrapped_Hero){
         delete_wrapped_object_table_UnpackAndDeleteHeroAndAccessories(hero);
     }
     
